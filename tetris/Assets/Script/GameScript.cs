@@ -56,11 +56,10 @@ public class GameScript : MonoBehaviour
 			int x = Mathf.RoundToInt(child.transform.position.x);
 			int y = Mathf.RoundToInt(child.transform.position.y);
 
-			if (x < 0 ||x >=  width || y < 0)
+			if (x < 0 ||x >=  width || y < 0 || grid[x,y] != null)
 			{
 				result = false;
 			}
-
 		}
 		
 		return result;
@@ -97,6 +96,7 @@ public class GameScript : MonoBehaviour
 	{
 		if (!MovePlayer (new Vector3(0, -1, 0)))
 		{
+			MovePlayerToGrid();
 			SpawnPlayer();
 		}
 	}
@@ -112,6 +112,14 @@ public class GameScript : MonoBehaviour
 		{
 			var move = new Vector3(tileScript.offsetX, tileScript.offsetY, 0);
 			player.transform.position += move;
+		}
+	}
+
+	private void MovePlayerToGrid()
+	{
+		foreach (Transform child in player.transform)
+		{
+			AddTileToGrid (child.gameObject, child.transform.position);
 		}
 	}
 
