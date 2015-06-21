@@ -1,15 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GameScript : MonoBehaviour {
-
-	// Use this for initialization
-	void Start () {
+public class GameScript : MonoBehaviour 
+{
+	public GameObject[] tetrominoes;
+	public GameObject block;
+	
+	void Start () 
+	{
 	
 	}
 	
-	// Update is called once per frame
-	void Update () {
+	void Update () 
+	{
 	
 	}
 }
