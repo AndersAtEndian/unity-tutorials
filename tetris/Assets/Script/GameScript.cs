@@ -27,12 +27,57 @@ public class GameScript : MonoBehaviour
 	
 	void Update () 
 	{
-	
+		if(Input.GetKeyDown("up"))
+		{
+			RotatePlayer(90);
+		}
+		
+		if (Input.GetKeyDown("down"))
+		{
+			MovePlayer(new Vector3(0, -1, 0));
+		}
+		
+		if (Input.GetKeyDown("left"))
+		{
+			MovePlayer(new Vector3(-1, 0, 0));
+		}
+		else if (Input.GetKeyDown("right"))
+		{
+			MovePlayer(new Vector3(1, 0, 0));
+		}	
 	}
 
 	private bool PlayerPositionValid()
 	{
-		return true;
+		bool result = true;
+		
+		foreach (Transform child in player.transform)
+		{
+			int x = Mathf.RoundToInt(child.transform.position.x);
+			int y = Mathf.RoundToInt(child.transform.position.y);
+
+			if (x < 0 ||x >=  width || y < 0)
+			{
+				result = false;
+			}
+
+		}
+		
+		return result;
+	}
+
+	private bool RotatePlayer(int degrees)
+	{
+		bool result = true;
+
+		player.transform.Rotate(0, 0, degrees);
+		if (!PlayerPositionValid())
+		{
+			player.transform.Rotate(0, 0, -degrees);
+			result = false;
+		}
+
+		return result;
 	}
 
 	private bool MovePlayer(Vector3 movement)
@@ -52,8 +97,7 @@ public class GameScript : MonoBehaviour
 	{
 		if (!MovePlayer (new Vector3(0, -1, 0)))
 		{
-			/* Spawn next... */
-
+			SpawnPlayer();
 		}
 	}
 
@@ -89,7 +133,7 @@ public class GameScript : MonoBehaviour
 		for (y=-1; y<height; y++)
 		{
 			Instantiate(block, new Vector3(-1, y, 0), Quaternion.identity);
-			Instantiate(block, new Vector3(width+1, y, 0), Quaternion.identity);
+			Instantiate(block, new Vector3(width, y, 0), Quaternion.identity);
 		}
 		
 		for (x=-1; x<(width+1); x++)
