@@ -10,17 +10,65 @@ public class GameScript : MonoBehaviour
 	public GameObject block;
 
 	private GameObject[,] grid;
+
+	private GameObject player;
 	
 	void Start () 
 	{
 		grid = new GameObject[width, height];
 
 		CreatePlayingField();
+
+		SpawnPlayer();
+
+		InvokeRepeating("MovePlayerDown", 0.3f, 0.3f);
+
 	}
 	
 	void Update () 
 	{
 	
+	}
+
+	private bool PlayerPositionValid()
+	{
+		return true;
+	}
+
+	private bool MovePlayer(Vector3 movement)
+	{
+		bool result = true;
+		player.transform.position += movement;
+		if (!PlayerPositionValid())
+		{
+			player.transform.position -= movement;
+			result = false;
+		}
+
+		return result;
+	}
+
+	private void MovePlayerDown()
+	{
+		if (!MovePlayer (new Vector3(0, -1, 0)))
+		{
+			/* Spawn next... */
+
+		}
+	}
+
+	private void SpawnPlayer()
+	{
+		int i = Random.Range(0, tetrominoes.Length);
+		
+		player = (GameObject)Instantiate(tetrominoes[i], new Vector3(width / 2, height, 0), Quaternion.identity);
+		
+		OffsetScript tileScript = player.GetComponent<OffsetScript>();
+		if (tileScript.offsetX != 0 || tileScript.offsetY != 0)
+		{
+			var move = new Vector3(tileScript.offsetX, tileScript.offsetY, 0);
+			player.transform.position += move;
+		}
 	}
 
 	private void AddTileToGrid(GameObject tile, Vector3 position)
