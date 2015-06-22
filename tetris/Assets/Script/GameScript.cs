@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
 
 public class GameScript : MonoBehaviour 
 {
@@ -15,7 +16,8 @@ public class GameScript : MonoBehaviour
 	
 	void Start () 
 	{
-		grid = new GameObject[width, height];
+		/* +1 - room to spawn */
+		grid = new GameObject[width, height+1];
 
 		CreatePlayingField();
 
@@ -56,7 +58,7 @@ public class GameScript : MonoBehaviour
 			int x = Mathf.RoundToInt(child.transform.position.x);
 			int y = Mathf.RoundToInt(child.transform.position.y);
 
-			if (x < 0 ||x >=  width || y < 0 || grid[x,y] != null)
+			if (x < 0 || x >=  width || y < 0 || grid[x,y] != null)
 			{
 				result = false;
 			}
@@ -97,15 +99,21 @@ public class GameScript : MonoBehaviour
 		if (!MovePlayer (new Vector3(0, -1, 0)))
 		{
 			MovePlayerToGrid();
+			DeleteRows ();
 			SpawnPlayer();
 		}
 	}
 
+	private void MoveBlockDown(GameObject block)
+	{
+		block.transform.position += new Vector3(0, -1, 0);
+	}
+
 	private void SpawnPlayer()
 	{
-		int i = Random.Range(0, tetrominoes.Length);
+		int i = UnityEngine.Random.Range(0, tetrominoes.Length);
 		
-		player = (GameObject)Instantiate(tetrominoes[i], new Vector3(width / 2, height, 0), Quaternion.identity);
+		player = (GameObject)Instantiate(tetrominoes[i], new Vector3(width / 2, height - 2, 0), Quaternion.identity);
 		
 		OffsetScript tileScript = player.GetComponent<OffsetScript>();
 		if (tileScript.offsetX != 0 || tileScript.offsetY != 0)
@@ -131,6 +139,69 @@ public class GameScript : MonoBehaviour
 		if (x >= 0 && x < width && y >= 0 && y < height)
 		{
 			grid[x,y] = tile;
+		}
+	}
+
+	private void DeleteRows()
+	{
+		Func<bool> deleteRow = () => 
+		{
+			int x, y;
+			bool rowFull;
+
+			for (y=0; y<height; y++)
+			{
+				rowFull = true;
+				for (x=0; x<width; x++)
+				{
+					if (grid[x, y] == null)
+					{
+						rowFull = false;
+						break;
+					}
+				}
+
+				if (rowFull)
+				{
+					for (x=0; x<width; x++)
+					{
+						Destroy (grid[x, y]);
+						grid[x, y] = null;
+					}
+
+					return true;
+				}
+			}
+
+			return false;
+		};
+
+		Func<bool> moveColumn = () => 
+		{
+			int x, y;
+
+			for (x=0; x<width; x++)
+			{
+				for (y=0; y<(height-1); y++)
+				{
+					if (grid[x, y] == null)
+					{
+						grid[x, y] = grid[x, y+1];
+						grid[x, y+1] = null;
+						if (grid[x, y] != null)
+						{
+							MoveBlockDown(grid[x, y]);
+						}
+					}
+				}
+			}
+
+			return true;
+		};
+
+		while(deleteRow())
+		{
+			moveColumn();
 		}
 	}
 
