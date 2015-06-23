@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
 using UnityEngine.UI;
 
@@ -10,11 +11,13 @@ public class GameScript : MonoBehaviour
 
 	public GameObject[] tetrominoes;
 	public GameObject block;
-
+	
 	public GameObject startGamePanel;
 
 	public Text scoreText;
 
+	/* Grid of blocks - used for collision detection and basically holds the game world
+	 * (apart from the player tetromino. */
 	private GameObject[,] grid;
 
 	private GameObject player;
@@ -23,6 +26,7 @@ public class GameScript : MonoBehaviour
 
 	private int score = 0;
 
+	/* Speed of player tetromino. */
 	private float speed = 0.3f;
 
 	void Start () 
@@ -101,6 +105,9 @@ public class GameScript : MonoBehaviour
 		}
 	}
 
+	/**
+	 * Update score and increase speed.
+	 */
 	private void UpdateScore(int updateScore)
 	{
 		score += updateScore;
@@ -175,6 +182,10 @@ public class GameScript : MonoBehaviour
 		block.transform.position += new Vector3(0, -1, 0);
 	}
 
+	/**
+	 * Spawn new player tetromino. If the tetromino is spawned in an invalid
+	 * position the game is over. 
+	 */
 	private void SpawnPlayer()
 	{
 		int i = UnityEngine.Random.Range(0, tetrominoes.Length);
@@ -194,12 +205,27 @@ public class GameScript : MonoBehaviour
 		}
 	}
 
+	/**
+	 * Add the player tetromino to the background grid. The grid will only hold 
+	 * the individual blocks and the original tetromino will be destroyed.
+	 */
 	private void MovePlayerToGrid()
 	{
+		/* Can't unparent a child inside a foreach loop of the parent. */ 
+		List<Transform> unparent = new List<Transform>(player.transform.childCount);
+		
 		foreach (Transform child in player.transform)
 		{
 			AddTileToGrid (child.gameObject, child.transform.position);
+			unparent.Add(child);
 		}
+		
+		foreach (Transform child in unparent)
+		{
+			child.parent = null;
+		}
+
+		Destroy (player);
 	}
 
 	private void AddTileToGrid(GameObject tile, Vector3 position)
@@ -213,6 +239,9 @@ public class GameScript : MonoBehaviour
 		}
 	}
 
+	/**
+	 * Delete full rows and drop all the blocks above.
+	 */
 	private void DeleteRows()
 	{
 		Func<bool> deleteRow = () => 
@@ -236,8 +265,8 @@ public class GameScript : MonoBehaviour
 				{
 					for (x=0; x<width; x++)
 					{
-						Destroy (grid[x, y]);
-						grid[x, y] = null;
+						Destroy (grid[x,y]);
+						grid[x,y] = null;
 					}
 
 					return true;
@@ -255,13 +284,13 @@ public class GameScript : MonoBehaviour
 			{
 				for (y=0; y<(height-1); y++)
 				{
-					if (grid[x, y] == null)
+					if (grid[x,y] == null)
 					{
-						grid[x, y] = grid[x, y+1];
-						grid[x, y+1] = null;
+						grid[x,y] = grid[x,y+1];
+						grid[x,y+1] = null;
 						if (grid[x, y] != null)
 						{
-							MoveBlockDown(grid[x, y]);
+							MoveBlockDown(grid[x,y]);
 						}
 					}
 				}
