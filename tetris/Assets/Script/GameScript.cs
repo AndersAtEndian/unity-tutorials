@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System;
+using UnityEngine.UI;
 
 public class GameScript : MonoBehaviour 
 {
@@ -10,43 +11,106 @@ public class GameScript : MonoBehaviour
 	public GameObject[] tetrominoes;
 	public GameObject block;
 
+	public GameObject startGamePanel;
+
+	public Text scoreText;
+
 	private GameObject[,] grid;
 
 	private GameObject player;
 	
+	private bool gameRunning = false;
+
+	private int score = 0;
+
+	private float speed = 0.3f;
+
 	void Start () 
 	{
 		/* +1 - room to spawn */
 		grid = new GameObject[width, height+1];
 
 		CreatePlayingField();
+	}
 
+	private void StartGame()
+	{
+		score = 0;
+		gameRunning = true;
+		startGamePanel.gameObject.SetActive(false);
+		
 		SpawnPlayer();
 
-		InvokeRepeating("MovePlayerDown", 0.3f, 0.3f);
+		speed = 0.3f;
+		Invoke("MovePlayerDown", speed);
+	}
 
+	private void StopGame()
+	{
+		CancelInvoke();
+
+		gameRunning = false;
+		startGamePanel.gameObject.SetActive(true);
+
+		int x, y;
+
+		for (y=0; y<height; y++)
+		{
+			for (x=0; x<width; x++)
+			{
+				if (grid[x, y] != null)
+				{
+					Destroy (grid[x, y]);
+					grid[x, y] = null;
+				}
+			}
+
+			Destroy (player);
+		}
 	}
 	
 	void Update () 
 	{
-		if(Input.GetKeyDown("up"))
+		if (gameRunning)
 		{
-			RotatePlayer(90);
+			if (Input.GetKeyDown("up"))
+			{
+				RotatePlayer(90);
+			}
+			
+			if (Input.GetKeyDown("down"))
+			{
+				MovePlayer(new Vector3(0, -1, 0));
+			}
+			
+			if (Input.GetKeyDown("left"))
+			{
+				MovePlayer(new Vector3(-1, 0, 0));
+			}
+			else if (Input.GetKeyDown("right"))
+			{
+				MovePlayer(new Vector3(1, 0, 0));
+			}	
 		}
-		
-		if (Input.GetKeyDown("down"))
+		else
 		{
-			MovePlayer(new Vector3(0, -1, 0));
+			if (Input.GetKeyDown (KeyCode.Space))
+			{
+				StartGame ();
+			}
 		}
-		
-		if (Input.GetKeyDown("left"))
+	}
+
+	private void UpdateScore(int updateScore)
+	{
+		score += updateScore;
+		scoreText.text = score.ToString();
+
+		speed -= 0.01f;
+		if (speed < 0.05f)
 		{
-			MovePlayer(new Vector3(-1, 0, 0));
+			speed = 0.05f;
 		}
-		else if (Input.GetKeyDown("right"))
-		{
-			MovePlayer(new Vector3(1, 0, 0));
-		}	
 	}
 
 	private bool PlayerPositionValid()
@@ -102,6 +166,8 @@ public class GameScript : MonoBehaviour
 			DeleteRows ();
 			SpawnPlayer();
 		}
+
+		Invoke("MovePlayerDown", speed);
 	}
 
 	private void MoveBlockDown(GameObject block)
@@ -120,6 +186,11 @@ public class GameScript : MonoBehaviour
 		{
 			var move = new Vector3(tileScript.offsetX, tileScript.offsetY, 0);
 			player.transform.position += move;
+		}
+
+		if (!PlayerPositionValid())
+		{
+			StopGame ();
 		}
 	}
 
@@ -199,8 +270,11 @@ public class GameScript : MonoBehaviour
 			return true;
 		};
 
+		int updateScore = 1;
+
 		while(deleteRow())
 		{
+			UpdateScore(updateScore++);
 			moveColumn();
 		}
 	}
